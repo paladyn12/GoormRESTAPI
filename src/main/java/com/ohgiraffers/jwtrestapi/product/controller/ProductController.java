@@ -82,11 +82,19 @@ public class ProductController {
 
     @Operation(summary = "관리자 페이지 상품 리스트 조회 요청", description = "관리자 페이지에서 상품 리스트 조회가 진행됩니다.", tags = { "ProductController" })
     @GetMapping("/products-management")
-    public ResponseEntity<ResponseDTO> selectProductListWithPagingForAdmin() {
+    public ResponseEntity<ResponseDTO> selectProductListWithPagingForAdmin(
+            @RequestParam(name = "offset", defaultValue = "1") String offset) {
 
+        int total = productService.selectProductTotal();
 
+        // 1페이지에 10개 데이터라는 검색 조건을 담을 객체
+        Criteria cri = new Criteria(Integer.valueOf(offset), 10);
+        PagingResponseDTO pagingResponseDTO = new PagingResponseDTO();
+        // DB에서 조회해온 데이터를 담는 setData();
+        pagingResponseDTO.setData(productService.selectProductListWithPagingForAdmin(cri));
+        pagingResponseDTO.setPageInfo(new PageDTO(cri, total));
 
-        return null;
+        return ResponseEntity.ok().body(new ResponseDTO(HttpStatus.OK, "조회 성공", pagingResponseDTO));
     }
 
     @Operation(summary = "관리자 페이지 상품 상세 페이지 조회 요청", description = "관리자 페이지에서 상품 상세 페이지 조회가 진행됩니다.", tags = { "ProductController" })

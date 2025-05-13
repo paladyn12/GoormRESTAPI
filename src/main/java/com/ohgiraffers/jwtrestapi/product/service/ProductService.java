@@ -1,8 +1,11 @@
 package com.ohgiraffers.jwtrestapi.product.service;
 
 import com.ohgiraffers.jwtrestapi.common.Criteria;
+import com.ohgiraffers.jwtrestapi.product.dto.ProductAndCategoryDTO;
 import com.ohgiraffers.jwtrestapi.product.dto.ProductDTO;
 import com.ohgiraffers.jwtrestapi.product.entity.Product;
+import com.ohgiraffers.jwtrestapi.product.entity.ProductAndCategory;
+import com.ohgiraffers.jwtrestapi.product.repository.ProductAndCategoryRepository;
 import com.ohgiraffers.jwtrestapi.product.repository.ProductRepository;
 import com.ohgiraffers.jwtrestapi.util.FileUploadUtils;
 import jakarta.transaction.Transactional;
@@ -36,6 +39,7 @@ public class ProductService {
 
     private static final Logger log = LoggerFactory.getLogger(ProductService.class);
     private final ProductRepository productRepository;
+    private final ProductAndCategoryRepository productAndCategoryRepository;
     /* Entity <-> DTO */
     private final ModelMapper modelMapper;
 
@@ -92,7 +96,6 @@ public class ProductService {
         List<Product> productListWithSearchValue = productRepository.findByProductNameContaining(search);
         for (int i = 0; i < productListWithSearchValue.size(); i++) {
             productListWithSearchValue.get(i).setProductImageUrl(IMAGE_URL + productListWithSearchValue.get(i).getProductImageUrl());
-
         }
 //        log.info("[ProductService] productListWithSearchValue : {}", productListWithSearchValue);
 
@@ -164,13 +167,22 @@ public class ProductService {
         return 0;
     }
 
-    public Object selectProductListWithPagingForAdmin(Criteria cri) {
+    public List<ProductAndCategoryDTO> selectProductListWithPagingForAdmin(Criteria cri) {
         log.info("[ProductService] selectProductListWithPagingForAdmin() Start");
 
+        int index = cri.getPageNum() - 1;
+        int count = cri.getAmount();
+        Pageable paging = PageRequest.of(index, count, Sort.by("productCode").descending());
+
+        Page<ProductAndCategory> result = productAndCategoryRepository.findAll(paging);
+        List<ProductAndCategory> productList = result.getContent();
+        for (int i = 0; i < productList.size(); i++) {
+            productList.get(i).setProductImageUrl(IMAGE_URL + productList.get(i).getProductImageUrl());
+        }
 
         log.info("[ProductService] selectProductListWithPagingForAdmin() End");
 
-        return null;
+        return productList.stream().map(product -> modelMapper.map(product, ProductAndCategoryDTO.class)).collect(Collectors.toList());
     }
 
     public ProductDTO selectProductForAdmin(int productCode) {

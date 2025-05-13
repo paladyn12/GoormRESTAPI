@@ -8,7 +8,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-@Repository
 public interface ProductRepository extends JpaRepository<Product , Integer> {
 
     // 판매 가능한 메뉴 조회
